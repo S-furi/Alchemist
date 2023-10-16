@@ -18,6 +18,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktor)
     alias(libs.plugins.graphql.server)
+    alias(libs.plugins.graphql.client)
 }
 
 dependencies {
@@ -102,6 +103,28 @@ kotlin {
 
 application {
     mainClass.set("it.unibo.alchemist.Alchemist")
+}
+
+/**
+ * Configure the Apollo Gradle plugin to generate Kotlin models
+ * from the GraphQL schema inside the `commonMain` sourceSet.
+ */
+apollo {
+    service("service") {
+        generateKotlinModels.set(true)
+        packageName.set("gql.client")
+        schemaFiles.from(file("src/commonMain/resources/graphql/schema.graphqls"))
+        srcDir("src/commonMain/resources/graphql")
+        outputDirConnection {
+            connectToKotlinSourceSet("commonMain")
+        }
+    }
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>() {
+    exclude {
+        it.file.absolutePath.contains("build/")
+    }
 }
 
 /**
