@@ -112,9 +112,9 @@ application {
  * from the GraphQL schema inside the `commonMain` sourceSet.
  */
 apollo {
-    service("service") {
+    service("alchemist") {
         generateKotlinModels.set(true)
-        packageName.set("gql.client")
+        packageName.set("it.unibo.alchemist.boundary.graphql.client")
         schemaFiles.from(file("src/commonMain/resources/graphql/schema.graphqls"))
         srcDir("src/commonMain/resources/graphql")
         outputDirConnection {
