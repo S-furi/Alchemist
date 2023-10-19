@@ -67,6 +67,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.kotlin.stdlib)
                 implementation(libs.apollo.runtime)
                 implementation(libs.kotlin.coroutines.core)
             }
@@ -121,10 +122,16 @@ apollo {
     }
 }
 
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt>() {
-    exclude {
-        it.file.absolutePath.contains("build/")
+fun isGeneratedFile(file: FileTreeElement): Boolean = file.file.absolutePath.contains("generated/")
+
+ktlint {
+    filter {
+        exclude(::isGeneratedFile)
     }
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>() {
+    exclude(::isGeneratedFile)
 }
 
 /**
