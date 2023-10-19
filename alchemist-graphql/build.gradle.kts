@@ -123,10 +123,14 @@ apollo {
     }
 }
 
-tasks.withType<io.gitlab.arturbosch.detekt.Detekt>() {
-    exclude {
-        it.file.absolutePath.contains("build/")
+ktlint {
+    filter {
+        exclude { it.file.absolutePath.contains("generated/") }
     }
+}
+
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>() {
+    exclude { it.file.absolutePath.contains("generated/") }
 }
 
 /**
