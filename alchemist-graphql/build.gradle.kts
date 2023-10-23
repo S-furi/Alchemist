@@ -122,7 +122,7 @@ apollo {
     }
 }
 
-fun isGeneratedFile(file: FileTreeElement): Boolean = file.file.absolutePath.contains("generated${File.pathSeparator}")
+fun isGeneratedFile(file: FileTreeElement): Boolean = file.file.absolutePath.contains("generated" + File.separator)
 
 ktlint {
     filter {
