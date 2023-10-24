@@ -60,6 +60,15 @@ kotlin {
     js(IR) {
         browser {
             binaries.executable()
+            browser {
+                commonWebpackConfig(
+                    Action {
+                        cssSupport {
+                            enabled.set(true)
+                        }
+                    },
+                )
+            }
         }
     }
 
@@ -149,6 +158,24 @@ tasks.named("run", JavaExec::class).configure {
             }
         },
     )
+}
+
+/**
+ * Configure the [Copy] task to copy the JS artifacts into the `jvmProcessResources` task.
+ * This will let accessing the JS artifacts when JVM code is executed.
+ */
+tasks.named<Copy>("jvmProcessResources") {
+    val jsBrowserDistribution = tasks.named("jsBrowserDistribution")
+    from(jsBrowserDistribution)
+}
+
+/**
+ * Configure GraphQL Schema download task to download the schema from the server
+ * at the default endpoint, locating the updated schema under the correct directory.
+ */
+tasks.withType<com.expediagroup.graphql.plugin.gradle.tasks.GraphQLDownloadSDLTask>().configureEach {
+    outputFile.set(File("src/commonMain/resources/graphql/schema.graphqls"))
+    endpoint = "http://localhost:8081/sdl"
 }
 
 /**
