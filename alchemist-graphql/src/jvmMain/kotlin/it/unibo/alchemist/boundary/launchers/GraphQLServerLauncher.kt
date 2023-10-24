@@ -9,8 +9,10 @@
 
 package it.unibo.alchemist.boundary.launchers
 
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.cors.routing.CORS
 import it.unibo.alchemist.boundary.Loader
 import it.unibo.alchemist.boundary.graphql.monitor.EnvironmentSubscriptionMonitor
 import it.unibo.alchemist.boundary.graphql.server.attributes.SimulationAttributeKey
@@ -49,13 +51,16 @@ class GraphQLServerLauncher @JvmOverloads constructor(
         }
     }
 
-    private fun<T, P : Position<out P>> makeServer(simulation: Simulation<T, P>) =
+    private fun <T, P : Position<out P>> makeServer(simulation: Simulation<T, P>) =
         embeddedServer(
             Netty,
             port = port,
             host = host,
             module = {
                 attributes.put(SimulationAttributeKey, simulation)
+                install(CORS) {
+                    anyHost()
+                }
                 graphQLModule()
                 graphQLRoutingModule()
             },
