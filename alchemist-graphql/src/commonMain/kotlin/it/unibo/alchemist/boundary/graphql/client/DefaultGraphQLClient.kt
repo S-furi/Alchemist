@@ -72,7 +72,7 @@ class DefaultGraphQLClient(private val client: ApolloClient) : GraphQLClient {
         }
 
         override fun addSubscriptionModule(): Builder = apply {
-            check(url == null) { "Server URL must be set before adding subscription module!" }
+            check(url != null) { "Server URL must be set before adding subscription module!" }
             apolloClientBuilder.subscriptionNetworkTransport(
                 WebSocketNetworkTransport.Builder()
                     .serverUrl("ws://$url/subscriptions")
