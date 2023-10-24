@@ -1,0 +1,13 @@
+subscription NodeSubscription($id: Int!) {
+  node(nodeId: $id) {
+    id
+    contents {
+      entries {
+        molecule {
+          name
+        }
+        concentration
+      }
+    }
+  }
+}
