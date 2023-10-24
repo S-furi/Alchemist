@@ -16,6 +16,7 @@ import com.expediagroup.graphql.server.ktor.graphQLSubscriptionsRoute
 import com.expediagroup.graphql.server.ktor.graphiQLRoute
 import io.ktor.server.application.Application
 import io.ktor.server.routing.routing
+import it.unibo.alchemist.boundary.graphql.server.modules.routes.resourceRoute
 
 /**
  * Ktor module that configure needed GraphQL routes, some of which are
@@ -29,5 +30,6 @@ fun Application.graphQLRoutingModule() {
         graphQLPostRoute()
         graphQLSDLRoute()
         graphiQLRoute()
+        resourceRoute()
     }
 }
