@@ -1,0 +1,8 @@
+"Returns the node ids of the given center node."
+query Neighborhood($nodeId: Int!) {
+    neighborhood(nodeId: $nodeId) {
+        getNeighbors {
+            id
+        }
+    }
+}
