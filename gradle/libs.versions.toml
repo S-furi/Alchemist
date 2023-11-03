@@ -11,6 +11,7 @@ junit = "5.10.1"
 konf = "1.1.2"
 kotest = "5.8.0"
 ktor = "2.3.5"
+letsplot-js = "4.4.1"
 dokka = "1.9.10"
 kotlin = "1.9.20"
 mockito = "5.7.0"
@@ -94,6 +95,7 @@ ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor"
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets-jvm", version.ref = "ktor" }
 leafletmap = "org.danilopianini:de.saring.leafletmap:1.0.5"
+letsplot-js = { module = "org.jetbrains.lets-plot:lets-plot-kotlin-js", version.ref = "letsplot-js" }
 listset = "org.danilopianini:listset:0.3.9"
 logback = "ch.qos.logback:logback-classic:1.4.11"
 mapsforge = "org.mapsforge:mapsforge-map-awt:0.20.0"
