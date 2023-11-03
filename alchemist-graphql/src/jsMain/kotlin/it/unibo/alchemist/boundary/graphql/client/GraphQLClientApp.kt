@@ -37,10 +37,10 @@ private const val PLOT_WIDTH: Int = 350
  * Main entrypoint of the JS application.
  */
 fun main() {
-    window.onload = { setUpEnvironmnet(MainScope()) }
+    window.onload = { setUpEnvironment(MainScope()) }
 }
 
-private fun setUpEnvironmnet(scope: CoroutineScope) {
+private fun setUpEnvironment(scope: CoroutineScope) {
     setButton("subscribe", ::subscribe, scope)
     setButton("play", simulationHandler::play, scope)
     setButton("pause", simulationHandler::pause, scope)
