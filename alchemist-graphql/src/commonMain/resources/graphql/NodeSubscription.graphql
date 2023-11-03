@@ -1,3 +1,4 @@
+"Subscribes to the changes of the given node."
 subscription NodeSubscription($id: Int!) {
   node(nodeId: $id) {
     id

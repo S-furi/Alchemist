@@ -1,3 +1,4 @@
+"Pauses the simulation."
 mutation PauseSimulation {
   pause
 }

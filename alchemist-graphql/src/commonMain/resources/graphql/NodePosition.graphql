@@ -1,3 +1,4 @@
+"Returns the position of the given node."
 query NodePosition($nodeId: Int!) {
     nodePosition(nodeId: $nodeId) {
         dimensions

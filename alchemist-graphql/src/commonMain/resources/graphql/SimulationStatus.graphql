@@ -1,3 +1,4 @@
+"Returns the actual simulation status."
 query SimulationStatus {
   simulationStatus
 }

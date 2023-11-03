@@ -1,3 +1,4 @@
+"Plays the simulation"
 mutation PlaySimulation {
   play
 }

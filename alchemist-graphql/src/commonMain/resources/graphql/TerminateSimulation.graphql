@@ -1,3 +1,4 @@
+"Terminate the simulation."
 mutation TerminateSimulation {
   terminate
 }
