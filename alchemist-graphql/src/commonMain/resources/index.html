@@ -5,8 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alchemist GraphQL Demo</title>
 </head>
+<style>
+    body {
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100vh;
+        margin: 0;
+    }
+
+    #plot {
+        text-align: center;
+        margin-top: 1em;
+    }
+
+    #status {
+        font-size: 24px;
+        text-align: center;
+        margin-top: 1em;
+    }
+
+    #buttons {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 1em;
+    }
+
+    button {
+        flex: 1;
+        margin: 0 0.5em;
+        padding: 0.5em 0;
+        font-size: 1.5em;
+    }
+
+    #subscribe {
+        background-color: #3498db;
+        color: white;
+    }
+
+    #play {
+        background-color: #27ae60;
+        color: white;
+    }
+
+    #pause {
+        background-color: #f39c12;
+        color: white;
+    }
+
+    #term {
+        background-color: #e74c3c;
+        color: white;
+    }
+</style>
 <body>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/JetBrains/lets-plot@v3.2.0/js-package/distr/lets-plot.min.js"></script>
     <script src="alchemist-graphql.js"></script>
-    <h1>Read the Console</h1>
+    <div id="plot"></div>
+    <div id="status">READY</div>
+    <div id="error"></div>
+    <div id="buttons">
+        <button type="button" id="subscribe">Subscribe</button>
+        <button type="button" id="play">Play</button>
+        <button type="button" id="pause">Pause</button>
+        <button type="button" id="term">Terminate</button>
+    </div>
 </body>
 </html>
