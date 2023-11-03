@@ -50,15 +50,6 @@ kotlin {
     js(IR) {
         browser {
             binaries.executable()
-            browser {
-                commonWebpackConfig(
-                    Action {
-                        cssSupport {
-                            enabled.set(true)
-                        }
-                    },
-                )
-            }
         }
     }
 
