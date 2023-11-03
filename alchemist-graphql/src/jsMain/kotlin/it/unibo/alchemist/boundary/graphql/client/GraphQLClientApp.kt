@@ -45,6 +45,7 @@ private fun setUpEnvironment(scope: CoroutineScope) {
     setButton("play", simulationHandler::play, scope)
     setButton("pause", simulationHandler::pause, scope)
     setButton("term", simulationHandler::terminate, scope)
+    scope.launch { updateSimulationStatus() }
 }
 
 private fun setButton(id: String, action: suspend () -> Unit, scope: CoroutineScope) {
