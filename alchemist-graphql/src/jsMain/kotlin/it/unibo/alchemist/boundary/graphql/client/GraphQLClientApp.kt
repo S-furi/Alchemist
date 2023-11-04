@@ -13,6 +13,7 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -26,12 +27,14 @@ import org.jetbrains.letsPlot.label.ggtitle
 import org.jetbrains.letsPlot.label.xlab
 import org.jetbrains.letsPlot.label.ylab
 import org.jetbrains.letsPlot.letsPlot
+import org.jetbrains.letsPlot.tooltips.layerTooltips
 
 private val graphqlClient: GraphQLClient = GraphQLClientFactory.subscriptionClient()
 private val simulationHandler: SimulationHandler = SimulationHandler(graphqlClient)
 private const val NODE_ID = 1
 private const val PLOT_HEIGHT: Int = 700
 private const val PLOT_WIDTH: Int = 350
+private const val REFRESH_RATE: Long = 300 // milliseconds
 
 /**
  * Main entrypoint of the JS application.
@@ -71,23 +74,74 @@ private suspend fun updateSimulationStatus() {
 
 private suspend fun subscribe() {
     println("SUBSCRIBING")
-    val nodeSubscription = graphqlClient.subscription(NodeSubscription(NODE_ID))
+    val neighborhoodSubscription = graphqlClient.subscription(NeighborNodesSubscription(NODE_ID))
     disableSubscriptionButton()
-    nodeSubscription.toFlow()
+    neighborhoodSubscription.toFlow()
         .onEach {
-            neighborhood(NODE_ID)
-                .associate { it.id to nodePosition(it.id) }
-                .apply { addPositionToPlot(this + mapOf(NODE_ID to nodePosition(NODE_ID)), NODE_ID) }
+            addNeigborsToPlot(it.data?.neighborhood?.getNeighbors!!)
+            delay(REFRESH_RATE)
         }.collect()
+}
+
+private suspend fun addNeigborsToPlot(neighbors: List<NeighborNodesSubscription.GetNeighbor>) {
+    val nodes = getNodesAsDodgeballNode(neighbors)
+    val data = mapOf(
+        "id" to nodes.map { it.id },
+        "x" to nodes.map { it.position.x },
+        "y" to nodes.map { it.position.y },
+        "concentration" to nodes.map { it.concentration },
+        "molecule" to nodes.map { it.molecule },
+        "nodeType" to nodes.map { it.type },
+    )
+    addPlotToDiv(addNeighborsToPlot(data))
+}
+
+private fun addNeighborsToPlot(data: Map<String, List<Any>>): Figure {
+    return letsPlot(data) {
+        x = "x"
+        y = "y"
+        color = asDiscrete("id")
+        shape = "nodeType"
+    } +
+        geomPoint(
+            size = 6.0,
+            tooltips = layerTooltips("molecule", "concentration"),
+        ) +
+        xlab("X position") +
+        ylab("Y position") +
+        ggtitle("Position in space of Surrogates for node $NODE_ID") +
+        ggsize(PLOT_HEIGHT, PLOT_WIDTH)
+}
+
+private suspend fun getNodesAsDodgeballNode(
+    neighbors: List<NeighborNodesSubscription.GetNeighbor>,
+): List<DodgeballNode> {
+    val positions = neighbors.associate { it.id to nodePosition(it.id) } + mapOf(NODE_ID to nodePosition(NODE_ID))
+    val center = getNodeInfo(NODE_ID)
+
+    return neighbors.map {
+        DodgeballNode(
+            id = it.id,
+            position = positions[it.id]!!,
+            molecule = it.contents.entries[0].molecule.name,
+            concentration = it.contents.entries[0].concentration,
+            type = "Neighbor",
+        )
+    } + DodgeballNode(
+        id = center.id,
+        position = positions[center.id]!!,
+        molecule = center.contents.entries[0].molecule.name,
+        concentration = center.contents.entries[0].concentration,
+        type = "Center",
+    )
 }
 
 private fun disableSubscriptionButton() {
     document.getElementById("subscribe")?.setAttribute("disabled", "true")
 }
 
-private suspend fun neighborhood(nodeId: Int) =
-    graphqlClient.query(NeighborhoodQuery(nodeId)).execute()
-        .data?.neighborhood?.getNeighbors!!
+private suspend fun getNodeInfo(nodeId: Int) =
+    graphqlClient.query(NodeQuery(nodeId)).execute().data?.environment?.nodeById!!
 
 private suspend fun nodePosition(nodeId: Int): NodePositionQuery.OnPosition2DSurrogate =
     graphqlClient.query(NodePositionQuery(nodeId))
@@ -100,28 +154,10 @@ private fun addPlotToDiv(p: Figure) {
     }
 }
 
-private fun addPositionToPlot(data: Map<Int, NodePositionQuery.OnPosition2DSurrogate>, center: Int) {
-    addPlotToDiv(
-        getPlot(
-            mapOf(
-                "id" to data.keys,
-                "x" to data.values.map { it.x },
-                "y" to data.values.map { it.y },
-                "node" to data.keys.map { if (it == center) "Center" else "Neighbor" },
-            ),
-        ),
-    )
-}
-
-private fun getPlot(data: Map<String, Any>) =
-    letsPlot(data) {
-        x = "x"
-        y = "y"
-        color = asDiscrete("id")
-        shape = "node"
-    } +
-        geomPoint(size = 6.0) +
-        xlab("X position") +
-        ylab("Y position") +
-        ggtitle("Position in space of Surrogates for node $NODE_ID") +
-        ggsize(PLOT_HEIGHT, PLOT_WIDTH)
+private data class DodgeballNode(
+    val id: Int,
+    val position: NodePositionQuery.OnPosition2DSurrogate,
+    val molecule: String,
+    val concentration: String,
+    val type: String,
+)
