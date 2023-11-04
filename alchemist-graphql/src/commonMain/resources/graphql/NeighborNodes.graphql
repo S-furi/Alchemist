@@ -1,0 +1,15 @@
+subscription NeighborNodes($nodeId: Int!) {
+    neighborhood(nodeId: $nodeId) {
+        getNeighbors {
+            id
+            contents {
+                entries {
+                    molecule {
+                        name
+                    }
+                    concentration
+                }
+            }
+        }
+    }
+}

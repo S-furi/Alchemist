@@ -1,0 +1,15 @@
+query Node($nodeId: Int!) {
+    environment {
+        nodeById(id: $nodeId) {
+            id
+            contents {
+                entries {
+                    molecule {
+                        name
+                    }
+                    concentration
+                }
+            }
+        }
+    }
+}
