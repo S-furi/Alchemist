@@ -17,6 +17,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.compression.Compression
 import io.ktor.server.plugins.compression.gzip
+import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.pingPeriod
 import io.ktor.server.websocket.timeout
@@ -38,6 +39,10 @@ private const val DEFAULT_TIMEOUT_DURATION = 10000L
 fun Application.graphQLModule() {
     install(Compression) {
         gzip()
+    }
+
+    install(CORS) {
+        anyHost()
     }
 
     install(WebSockets) {
