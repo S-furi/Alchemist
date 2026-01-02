@@ -18,6 +18,7 @@ import it.unibo.alchemist.model.Node.Companion.asProperty
 import it.unibo.alchemist.model.Position
 import it.unibo.alchemist.model.Reaction
 import it.unibo.alchemist.model.molecules.SimpleMolecule
+import it.unibo.alchemist.model.observation.MutableObservable.Companion.observe
 import it.unibo.alchemist.model.protelis.AlchemistExecutionContext
 import it.unibo.alchemist.model.protelis.properties.ProtelisDevice
 import it.unibo.alchemist.util.RealDistributions
@@ -154,8 +155,9 @@ class RunProtelisProgram<P : Position<P>> private constructor(
      * @return true if the Program has finished its last computation,
      * and is ready to send a new message (used for dependency management)
      */
-    var isComputationalCycleComplete = false
-        private set
+    val isComputationalCycleComplete: Boolean get() = observeComputationalCycleComplete.current
+
+    val observeComputationalCycleComplete = observe(false)
 
     private val name: Molecule =
         node.reactions
@@ -208,7 +210,7 @@ class RunProtelisProgram<P : Position<P>> private constructor(
     override fun execute() {
         vm.runCycle()
         node.setConcentration(name, vm.currentValue)
-        isComputationalCycleComplete = true
+        observeComputationalCycleComplete.update { true }
     }
 
     /*
@@ -226,7 +228,7 @@ class RunProtelisProgram<P : Position<P>> private constructor(
      * Resets the computation status (used for dependency management).
      */
     fun prepareForComputationalCycle() {
-        isComputationalCycleComplete = false
+        observeComputationalCycleComplete.update { false }
     }
 
     @Suppress("UnusedPrivateMember")
