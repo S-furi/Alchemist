@@ -7,28 +7,24 @@
  * as described in the file LICENSE in the Alchemist distribution's top directory.
  */
 
-package it.unibo.alchemist.core.reactive
+package it.unibo.alchemist.core
 
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import it.unibo.alchemist.boundary.OutputMonitor
-import it.unibo.alchemist.core.Engine
-import it.unibo.alchemist.core.ReactiveEngine
-import it.unibo.alchemist.core.Simulation
+import it.unibo.alchemist.core.util.DependencyUtils
 import it.unibo.alchemist.model.Actionable
 import it.unibo.alchemist.model.Environment
+import it.unibo.alchemist.model.Molecule
 import it.unibo.alchemist.model.Node
 import it.unibo.alchemist.model.Position
-import it.unibo.alchemist.model.Reaction
 import it.unibo.alchemist.model.Time
-import it.unibo.alchemist.model.TimeDistribution
 import it.unibo.alchemist.model.biochemistry.BiochemistryIncarnation
 import it.unibo.alchemist.model.biochemistry.molecules.Biomolecule
 import it.unibo.alchemist.model.conditions.MoleculeHasConcentration
 import it.unibo.alchemist.model.environments.Continuous2DEnvironment
 import it.unibo.alchemist.model.linkingrules.NoLinks
 import it.unibo.alchemist.model.nodes.GenericNode
-import it.unibo.alchemist.model.reactions.AbstractReaction
 import it.unibo.alchemist.model.timedistributions.DiracComb
 import it.unibo.alchemist.model.times.DoubleTime
 import java.util.concurrent.CopyOnWriteArrayList
@@ -48,24 +44,6 @@ class TestEngineComparison : FreeSpec({
                     trace.add(TraceEntry(time.toDouble(), node.id, mol.name, (conc as Number).toDouble()))
                 }
             }
-        }
-    }
-
-    class SimpleReaction<T>(
-        node: Node<T>,
-        distribution: TimeDistribution<T>,
-        val action: () -> Unit,
-    ) : AbstractReaction<T>(node, distribution) {
-        override fun updateInternalStatus(
-            currentTime: Time,
-            hasBeenExecuted: Boolean,
-            environment: Environment<T, *>,
-        ) = Unit
-
-        override fun cloneOnNewNode(node: Node<T>, currentTime: Time): Reaction<T> = throw NotImplementedError()
-
-        override fun execute() {
-            action()
         }
     }
 
@@ -99,104 +77,69 @@ class TestEngineComparison : FreeSpec({
         return monitor.trace
     }
 
+    val a = Biomolecule("A")
+    val b = Biomolecule("B")
+    val c = Biomolecule("C")
+
+    fun setupNode(env: Continuous2DEnvironment<Double>): GenericNode<Double> {
+        val node = GenericNode(env)
+        node.setConcentration(a, 1.0)
+        node.setConcentration(b, 0.0)
+        node.setConcentration(c, 0.0)
+        return node
+    }
+
+    fun addReaction(node: Node<Double>, rate: Double, conditionMolecule: Molecule, action: () -> Unit) {
+        DependencyUtils.SimpleReaction(node, DiracComb(rate)) {
+            action()
+        }.apply {
+            conditions = listOf(MoleculeHasConcentration(node, conditionMolecule, 1.0))
+            node.addReaction(this)
+        }
+    }
+
     "Compare Engine and ReactiveEngine" - {
-
-        "Single reaction" {
-            val setup = { env: Continuous2DEnvironment<Double> ->
-                val node = GenericNode(env)
-                val a = Biomolecule("A")
-                val b = Biomolecule("B")
-                val c = Biomolecule("C")
-
-                node.setConcentration(a, 1.0)
-                node.setConcentration(b, 0.0)
-                node.setConcentration(c, 0.0)
-
-                SimpleReaction(node, DiracComb(1.0)) {
+        listOf(
+            "Simple Chain: A -> B -> C" to { env: Continuous2DEnvironment<Double> ->
+                val node = setupNode(env)
+                addReaction(node, 1.0, a) {
                     node.setConcentration(a, 0.0)
                     node.setConcentration(b, 1.0)
-                }.apply {
-                    conditions = listOf(MoleculeHasConcentration(node, a, 1.0))
-                    node.addReaction(this)
                 }
-
+                addReaction(node, 1.0, b) {
+                    node.setConcentration(b, 0.0)
+                    node.setConcentration(c, 1.0)
+                }
                 env.addNode(node, env.makePosition(0, 0))
                 Unit
-            }
-
-            val traceEngine = runAndTrace(setup) { Engine(it) }
-            val traceReactive = runAndTrace(setup) { ReactiveEngine(it) }
-
-            traceReactive shouldContainExactly traceEngine
-        }
-
-        "Simple mutiple reactions" {
-            val setup = { env: Continuous2DEnvironment<Double> ->
-                val node = GenericNode(env)
-                val a = Biomolecule("A")
-                val b = Biomolecule("B")
-                val c = Biomolecule("C")
-
-                node.setConcentration(a, 1.0)
-                node.setConcentration(b, 0.0)
-                node.setConcentration(c, 0.0)
-
-                SimpleReaction(node, DiracComb(1.0)) {
+            },
+            "Simple Branching: A -> B, A -> C" to { env: Continuous2DEnvironment<Double> ->
+                val node = setupNode(env)
+                addReaction(node, 1.0, a) {
                     node.setConcentration(b, node.getConcentration(b) + 1.0)
-                }.apply {
-                    conditions = listOf(MoleculeHasConcentration(node, a, 1.0))
-                    node.addReaction(this)
                 }
-
-                SimpleReaction(node, DiracComb(0.5)) {
+                addReaction(node, 0.5, a) {
                     node.setConcentration(c, node.getConcentration(c) + 1.0)
-                }.apply {
-                    conditions = listOf(MoleculeHasConcentration(node, a, 1.0))
-                    node.addReaction(this)
                 }
-
                 env.addNode(node, env.makePosition(0, 0))
                 Unit
-            }
-
-            val traceEngine = runAndTrace(setup) { Engine(it) }
-            val traceReactive = runAndTrace(setup) { ReactiveEngine(it) }
-
-            traceReactive shouldContainExactly traceEngine
-        }
-
-        "Mutliple interleaving reactions" {
-            val setup = { env: Continuous2DEnvironment<Double> ->
-                val node = GenericNode(env)
-                val a = Biomolecule("A")
-                val b = Biomolecule("B")
-
-                node.setConcentration(a, 1.0)
-                node.setConcentration(b, 0.0)
-
-                SimpleReaction(node, DiracComb(1.0)) {
+            },
+            "Simple Feedback Loop: A -> B -> A" to { env: Continuous2DEnvironment<Double> ->
+                val node = setupNode(env)
+                addReaction(node, 1.0, a) {
                     node.setConcentration(a, 0.0)
                     node.setConcentration(b, 1.0)
-                }.apply {
-                    conditions = listOf(MoleculeHasConcentration(node, a, 1.0))
-                    node.addReaction(this)
                 }
-
-                SimpleReaction(node, DiracComb(1.0)) {
+                addReaction(node, 1.0, b) {
                     node.setConcentration(b, 0.0)
                     node.setConcentration(a, 1.0)
-                }.apply {
-                    conditions = listOf(MoleculeHasConcentration(node, b, 1.0))
-                    node.addReaction(this)
                 }
-
                 env.addNode(node, env.makePosition(0, 0))
                 Unit
-            }
-
+            },
+        ).forEach { (_, setup) ->
             val traceEngine = runAndTrace(setup) { Engine(it) }
             val traceReactive = runAndTrace(setup) { ReactiveEngine(it) }
-
             traceReactive shouldContainExactly traceEngine
         }
     }

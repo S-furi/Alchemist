@@ -13,13 +13,35 @@ import it.unibo.alchemist.model.Environment
 import it.unibo.alchemist.model.Incarnation
 import it.unibo.alchemist.model.Node
 import it.unibo.alchemist.model.Reaction
+import it.unibo.alchemist.model.Time
+import it.unibo.alchemist.model.TimeDistribution
 import it.unibo.alchemist.model.environments.Continuous2DEnvironment
 import it.unibo.alchemist.model.linkingrules.ConnectWithinDistance
 import it.unibo.alchemist.model.positions.Euclidean2DPosition
+import it.unibo.alchemist.model.reactions.AbstractReaction
 import it.unibo.alchemist.model.timedistributions.ExponentialTime
 import org.apache.commons.math3.random.RandomGenerator
 
 object DependencyUtils {
+
+    class SimpleReaction<T>(
+        node: Node<T>,
+        distribution: TimeDistribution<T>,
+        val action: () -> Unit,
+    ) : AbstractReaction<T>(node, distribution) {
+        override fun updateInternalStatus(
+            currentTime: Time,
+            hasBeenExecuted: Boolean,
+            environment: Environment<T, *>,
+        ) = Unit
+
+        override fun cloneOnNewNode(node: Node<T>, currentTime: Time): Reaction<T> = throw NotImplementedError()
+
+        override fun execute() {
+            action()
+        }
+    }
+
     data class RandomContext(
         val randomGenerator: RandomGenerator,
     )
