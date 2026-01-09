@@ -209,6 +209,11 @@ public final class Expression implements IExpression {
         final Object d = comp.getRootNodeData();
         final Object valObj = comp.getRightChildren().getValue(matches);
         final Double val;
+
+        if (valObj == null) {
+            return false;
+        }
+
         if (valObj instanceof Double) {
             /*
              * The right child is an ITreeNode<Double>
