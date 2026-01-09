@@ -10,6 +10,7 @@
 package it.unibo.alchemist.core
 
 import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import it.unibo.alchemist.model.Environment
 import it.unibo.alchemist.model.Reaction
 import it.unibo.alchemist.model.Time
@@ -29,13 +30,14 @@ class TestReactiveDependencies : AbstractDependencyTest() {
         dependencies.forEach { target ->
             target.initializationComplete(Time.ZERO, environment)
             target.rescheduleRequest.onChange(this) {
-                counters[target]!!.incrementAndGet()
+                counters[target]?.incrementAndGet()
             }
         }
         this.execute()
 
         dependencies.forEach { target ->
-            val count = counters[target]!!.get()
+            val count = counters[target]?.get()
+            count.shouldNotBeNull()
             count shouldBeGreaterThan 0
         }
 

@@ -22,6 +22,7 @@ import it.unibo.alchemist.model.nodes.GenericNode
 import it.unibo.alchemist.model.timedistributions.DiracComb
 import it.unibo.alchemist.model.times.DoubleTime
 
+@Suppress("UnnecessaryAbstractClass")
 abstract class AbstractEngineTest(
     val engineFactory: (Environment<Double, *>) -> Simulation<Double, *>,
 ) : FreeSpec({
@@ -39,9 +40,11 @@ abstract class AbstractEngineTest(
         nodeA.setConcentration(molN, 0.0)
         nodeB.setConcentration(molM, 0.0)
 
-        DependencyUtils.SimpleReaction(nodeB, DiracComb(1.0)) {
-            nodeB.setConcentration(molM, 1.0)
-        }.apply { nodeB.addReaction(this) }
+        nodeB.addReaction(
+            DependencyUtils.SimpleReaction(nodeB, DiracComb(1.0)) {
+                nodeB.setConcentration(molM, 1.0)
+            },
+        )
 
         DependencyUtils.SimpleReaction(nodeA, DiracComb(1.0)) {
             nodeA.setConcentration(molN, 1.0)
