@@ -69,8 +69,9 @@ public abstract class AbstractCondition<T> implements Condition<T> {
     }
 
     @Override
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP", justification = "This is intentional")
     public final ObservableSet<? extends Observable<?>> observeInboundDependencies() {
-        return dependencies.copy();
+        return dependencies;
     }
 
     /**

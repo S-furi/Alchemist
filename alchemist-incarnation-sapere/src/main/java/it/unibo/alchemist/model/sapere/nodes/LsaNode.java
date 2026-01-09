@@ -94,7 +94,7 @@ public final class LsaNode extends GenericNode<List<ILsaMolecule>> implements IL
                         res.add(instance);
                     }
                 }
-                return Option.fromNullable(res);
+                return Option.fromNullable(res); // actually always `Some`
             });
         }
     }
@@ -106,7 +106,7 @@ public final class LsaNode extends GenericNode<List<ILsaMolecule>> implements IL
 
     @Override
     public ObservableList<ILsaMolecule> observeLsaSpace() {
-        return instances.copy();
+        return instances;
     }
 
     @Override
