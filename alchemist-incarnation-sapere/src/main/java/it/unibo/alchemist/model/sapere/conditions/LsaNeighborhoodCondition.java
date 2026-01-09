@@ -11,8 +11,10 @@ package it.unibo.alchemist.model.sapere.conditions;
 
 import it.unibo.alchemist.model.Context;
 import it.unibo.alchemist.model.Environment;
+import it.unibo.alchemist.model.Neighborhood;
 import it.unibo.alchemist.model.Node;
 import it.unibo.alchemist.model.Reaction;
+import it.unibo.alchemist.model.observation.ObservableExtensions;
 import it.unibo.alchemist.model.sapere.ILsaMolecule;
 import it.unibo.alchemist.model.sapere.ILsaNode;
 import it.unibo.alchemist.model.sapere.dsl.IExpression;
@@ -49,6 +51,22 @@ public final class LsaNeighborhoodCondition extends LsaStandardCondition {
     ) {
         super(molecule, node);
         this.environment = environment;
+
+        // We depend on every neighbor's LSA space, hence an update is triggered
+        // every time a change in node's neighborhood is emitted, or one of the
+        // members' LSA space has changed.
+        addObservableDependency(ObservableExtensions.INSTANCE.switchMap(
+            environment.observeNeighborhood(node).map(Neighborhood::getNeighbors),
+            neighbors ->
+                ObservableExtensions.INSTANCE.combineLatest(
+                    neighbors.stream()
+                        .filter(it -> it instanceof ILsaNode)
+                        .map(neighbor ->
+                            ((ILsaNode) neighbor).observeLsaSpace()
+                        ).toList(),
+                    space -> space
+                )
+        ));
     }
 
     @Override
