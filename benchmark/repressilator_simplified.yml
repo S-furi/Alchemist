@@ -1,0 +1,94 @@
+incarnation: biochemistry
+
+seeds:
+  scenario: 1
+  simulation: 1
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [2]
+
+environment:
+  type: BioRect2DEnvironment
+  parameters: []
+
+_repressilator: &repressilator
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[geneA] --> [geneA] + [A]"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[geneB] --> [geneB] + [B]"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[geneC] --> [geneC] + [C]"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[A] + [geneB] --> [geneB_repressed]"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[B] + [geneC] --> [geneC_repressed]"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[C] + [geneA] --> [geneA_repressed]"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[geneA_repressed] --> [geneA] + [A]"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[geneB_repressed] --> [geneB] + [B]"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[geneC_repressed] --> [geneC] + [C]"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[A] --> []"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[B] --> []"
+  - time-distribution:
+      type: ExponentialTime
+      parameters: [1.0]
+    program: "[C] --> []"
+
+export:
+  - type: CSVExporter
+    parameters:
+      fileNameRoot: "bench_interdependent"
+      interval: 1.0E-10
+      exportPath: "."
+    data:
+      - time
+
+deployments:
+  - type: Grid
+    parameters: [0, 0, 20, 20, 2, 2, 0.1, 0.1]
+    programs: *repressilator
+    contents:
+      - molecule: geneA
+        concentration: 100
+      - molecule: geneB
+        concentration: 100
+      - molecule: geneC
+        concentration: 100
+      - molecule: A
+        concentration: 0
+      - molecule: B
+        concentration: 0
+      - molecule: C
+        concentration: 0
+
+terminate:
+  - type: StepCount
+    parameters: [100]
