@@ -24,4 +24,4 @@ deployments:
 
 terminate:
   type: AfterTime
-  parameters: [1000]
+  parameters: [100]

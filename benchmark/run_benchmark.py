@@ -12,7 +12,7 @@ BENCHMARK_DIR = os.path.join(REPO_DIR, "benchmark")
 RESULTS_FILE = os.path.join(BENCHMARK_DIR, "results.csv")
 SUMMARY_FILE = os.path.join(BENCHMARK_DIR, "summary.csv")
 SCENARIOS = ["independent.yml", "interdependent.yml"]
-RUNS = 3
+RUNS = 10
 
 def run_command(command, cwd=None, verbose=False):
     try:
