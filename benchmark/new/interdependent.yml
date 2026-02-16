@@ -1,0 +1,51 @@
+incarnation: biochemistry
+
+seeds:
+  scenario: 0
+  simulation: 0
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [2.0]
+
+environment:
+  type: BioRect2DEnvironment
+  parameters: [-25.0, 25.0, -25.0, 25.0]
+
+_reactions: &reactions
+  - time-distribution: 1.0
+    program: >
+      [A] --> [B]
+  - time-distribution: 1.0
+    program: >
+      [B] --> [C]
+  - time-distribution: 1.0
+    program: >
+      [C] --> [A]
+  - time-distribution: 1.0
+    program: >
+      [A] + [B] --> [D]
+  - time-distribution: 1.0
+    program: >
+      [D] --> [A] + [B]
+  - time-distribution: 0.1
+    program: >
+      [A] + [B in neighbor] --> [A] + [A in neighbor]
+
+deployments:
+  - type: Grid
+    parameters: [-25.0, -25.0, 25.0, 25.0, 1.0, 1.0]
+    contents:
+      - molecule: A
+        concentration: 10
+      - molecule: B
+        concentration: 10
+      - molecule: C
+        concentration: 10
+    programs:
+      - *reactions
+
+terminate:
+  - type: AfterTime
+    parameters: 100
+
