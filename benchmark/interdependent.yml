@@ -1,0 +1,78 @@
+incarnation: biochemistry
+
+seeds:
+  scenario: 1
+  simulation: 1
+
+environment:
+  type: BioRect2DEnvironmentNoOverlap
+  parameters: [-5, 5, -5, 5]
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [2]
+
+_repressilator: &repressilator
+  # Dimerization
+  - time-distribution: 100
+    program: "[2 PtA] --> [PtA2]"
+  - time-distribution: 10
+    program: "[PtA2] --> [2 PtA]"
+  - time-distribution: 100
+    program: "[2 PtB] --> [PtB2]"
+  - time-distribution: 10
+    program: "[PtB2] --> [2 PtB]"
+  - time-distribution: 100
+    program: "[2 PtC] --> [PtC2]"
+  - time-distribution: 10
+    program: "[PtC2] --> [2 PtC]"
+
+  # Repression
+  - time-distribution: 10
+    program: "[GeneB] + [PtA2] --> [GeneB_Rep]"
+  - time-distribution: 10
+    program: "[GeneB_Rep] --> [GeneB] + [PtA2]"
+  - time-distribution: 10
+    program: "[GeneC] + [PtB2] --> [GeneC_Rep]"
+  - time-distribution: 10
+    program: "[GeneC_Rep] --> [GeneC] + [PtB2]"
+  - time-distribution: 10
+    program: "[GeneA] + [PtC2] --> [GeneA_Rep]"
+  - time-distribution: 10
+    program: "[GeneA_Rep] --> [GeneA] + [PtC2]"
+
+  # Production
+  - time-distribution: 50
+    program: "[GeneA] --> [GeneA] + [PtA]"
+  - time-distribution: 50
+    program: "[GeneB] --> [GeneB] + [PtB]"
+  - time-distribution: 50
+    program: "[GeneC] --> [GeneC] + [PtC]"
+
+  # Degradation
+  - time-distribution: 1
+    program: "[PtA] --> []"
+  - time-distribution: 1
+    program: "[PtB] --> []"
+  - time-distribution: 1
+    program: "[PtC] --> []"
+
+deployments:
+  - type: Grid
+    parameters: [-4.0, -4.0, 4.0, 4.0, 1.0, 1.0, 0.1, 0.1, 0.0, 0.0]
+    nodes: "0.5"
+    programs:
+      - *repressilator
+    contents:
+      - molecule: GeneA
+        concentration: 1
+      - molecule: GeneB
+        concentration: 1
+      - molecule: GeneC
+        concentration: 1
+      - molecule: PtA
+        concentration: 50
+
+terminate:
+  type: AfterTime
+  parameters: [500]

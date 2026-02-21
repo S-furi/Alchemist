@@ -1,0 +1,51 @@
+incarnation: sapere
+
+seeds:
+  scenario: 0
+  simulation: 0
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [2.0]
+
+environment:
+  type: Continuous2DEnvironment
+
+_reactions: &reactions
+  - time-distribution: 1.0
+    program: "{a1} --> {b1}"
+  - time-distribution: 1.0
+    program: "{a2} --> {b2}"
+  - time-distribution: 1.0
+    program: "{a3} --> {b3}"
+  - time-distribution: 1.0
+    program: "{a4} --> {b4}"
+  - time-distribution: 1.0
+    program: "{a5} --> {b5}"
+  - time-distribution: 1.0
+    program: "{b1} --> {a1}"
+  - time-distribution: 1.0
+    program: "{b2} --> {a2}"
+  - time-distribution: 1.0
+    program: "{b3} --> {a3}"
+  - time-distribution: 1.0
+    program: "{b4} --> {a4}"
+  - time-distribution: 1.0
+    program: "{b5} --> {a5}"
+
+deployments:
+  - type: Grid
+    parameters: [-25.0, -25.0, 25.0, 25.0, 1.0, 1.0]
+    contents:
+      - molecule: a1
+      - molecule: a2
+      - molecule: a3
+      - molecule: a4
+      - molecule: a5
+    programs:
+      - *reactions
+
+terminate:
+  - type: AfterTime
+    parameters: 100
+

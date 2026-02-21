@@ -1,0 +1,28 @@
+incarnation: scafi
+
+network-model: { type: ConnectWithinDistance, parameters: [0.5] }
+
+seeds:
+  scenario: 1
+  simulation: 1
+
+deployments:
+  - type: Grid
+    parameters: [-5.0, -5.0, 5.0, 5.0, 0.25, 0.25, 0.1, 0.1]
+    contents:
+      - molecule: source
+        concentration: false
+      - in: { type: Rectangle, parameters: [-0.5, -0.5, 1, 1] }
+        molecule: source
+        concentration: true
+    programs:
+      - time-distribution: 1
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.alchemist.model.scafi.benchmark.IndependentScafi]
+      - program: send
+
+terminate:
+  type: AfterTime
+  parameters: [10000]

@@ -1,0 +1,90 @@
+incarnation: biochemistry
+
+seeds:
+  scenario: 1
+  simulation: 1
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [1.1]
+
+environment:
+  type: BioRect2DEnvironment
+  parameters: [-15, 15, -15, 15]
+
+_reactions: &reactions
+  # Local circular oscillator (10 reactions)
+  - time-distribution: 1
+    program: "[M1] --> [M2]"
+  - time-distribution: 1
+    program: "[M2] --> [M3]"
+  - time-distribution: 1
+    program: "[M3] --> [M4]"
+  - time-distribution: 1
+    program: "[M4] --> [M5]"
+  - time-distribution: 1
+    program: "[M5] --> [M6]"
+  - time-distribution: 1
+    program: "[M6] --> [M7]"
+  - time-distribution: 1
+    program: "[M7] --> [M8]"
+  - time-distribution: 1
+    program: "[M8] --> [M9]"
+  - time-distribution: 1
+    program: "[M9] --> [M10]"
+  - time-distribution: 1
+    program: "[M10] --> [M1]"
+
+  # Neighborhood coupling (10 reactions)
+  # Each reaction depends on a neighbor's molecule and modifies a neighbor's molecule
+  - time-distribution: 0.1
+    program: "[M1] + [M10 in neighbor] --> [M1] + [M1 in neighbor]"
+  - time-distribution: 0.1
+    program: "[M2] + [M1 in neighbor] --> [M2] + [M2 in neighbor]"
+  - time-distribution: 0.1
+    program: "[M3] + [M2 in neighbor] --> [M3] + [M3 in neighbor]"
+  - time-distribution: 0.1
+    program: "[M4] + [M3 in neighbor] --> [M4] + [M4 in neighbor]"
+  - time-distribution: 0.1
+    program: "[M5] + [M4 in neighbor] --> [M5] + [M5 in neighbor]"
+  - time-distribution: 0.1
+    program: "[M6] + [M5 in neighbor] --> [M6] + [M6 in neighbor]"
+  - time-distribution: 0.1
+    program: "[M7] + [M6 in neighbor] --> [M7] + [M7 in neighbor]"
+  - time-distribution: 0.1
+    program: "[M8] + [M7 in neighbor] --> [M8] + [M8 in neighbor]"
+  - time-distribution: 0.1
+    program: "[M9] + [M8 in neighbor] --> [M9] + [M9 in neighbor]"
+  - time-distribution: 0.1
+    program: "[M10] + [M9 in neighbor] --> [M10] + [M10 in neighbor]"
+
+deployments:
+  - type: Grid
+    parameters: [-10, -10, 10, 10, 1, 1] # 21x21 = 441 nodes
+    programs:
+      - *reactions
+    contents:
+      - molecule: M1
+        concentration: 100
+      - molecule: M2
+        concentration: 10
+      - molecule: M3
+        concentration: 10
+      - molecule: M4
+        concentration: 10
+      - molecule: M5
+        concentration: 10
+      - molecule: M6
+        concentration: 10
+      - molecule: M7
+        concentration: 10
+      - molecule: M8
+        concentration: 10
+      - molecule: M9
+        concentration: 10
+      - molecule: M10
+        concentration: 10
+
+terminate:
+  type: AfterTime
+  parameters: [20]
