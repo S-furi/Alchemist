@@ -23,8 +23,9 @@ MASTER_WORKTREE = os.path.abspath(os.path.join(REPO_DIR, "../alchemist-benchmark
 BENCHMARK_DIR = os.path.join(REPO_DIR, "benchmark")
 RESULTS_FILE = os.path.join(BENCHMARK_DIR, "results.csv")
 SUMMARY_FILE = os.path.join(BENCHMARK_DIR, "summary.csv")
-SCENARIOS = ["independent.yml", "independent_scafi.yml"]
-RUNS = 6
+# beware, running all four tests will take a LOT of time, especially for 10 runs each
+SCENARIOS = ["independent.yml", "independent_scafi.yml", "interdependent.yml", "biochem_stress.yml"]
+RUNS = 6 # runs must be > 6 or wilcoxon test will not have enough tests to compute properly
 
 def run_command(command, cwd=None, verbose=False):
     try:
@@ -51,7 +52,8 @@ def find_jar(directory: str):
 
 def perform_statistical_test(name_a, times_a, name_b, times_b):
     """
-    Performs a Wilcoxon Signed-Rank test (non-parametric) for PAIRED samples.
+    Performs a Wilcoxon Signed-Rank test for evaluating which model is best.
+    Probably not needed as the average time is quite self explainatory ;)
     """
     if not SCIPY_AVAILABLE or not times_a or not times_b:
         return float('nan'), "N/A"
@@ -66,11 +68,11 @@ def perform_statistical_test(name_a, times_a, name_b, times_b):
 
     verdict = "Inconclusive"
     alpha = 0.05
-    
+
     if p_value < alpha:
         diffs = [b - a for a, b in zip(times_a, times_b)]
-        positive_diffs = sum(1 for d in diffs if d > 0) # A was faster (Time A < Time B, so B-A > 0)
-        negative_diffs = sum(1 for d in diffs if d < 0) # B was faster
+        positive_diffs = sum(1 for d in diffs if d > 0)
+        negative_diffs = sum(1 for d in diffs if d < 0)
 
         if positive_diffs > negative_diffs:
              verdict = f"{name_a} faster"
@@ -135,10 +137,9 @@ def main():
                             print("ABORTING.")
                             sys.exit(1)
 
-                        # Extract time from logs
                         start_match = re.search(r"(\d{2}:\d{2}:\d{2}\.\d{3}).*Starting engine", output)
                         end_match = re.search(r"(\d{2}:\d{2}:\d{2}\.\d{3}).*Termination condition reached", output)
-                        
+
                         if start_match and end_match:
                             fmt = "%H:%M:%S.%f"
                             t_start = datetime.strptime(start_match.group(1), fmt)
