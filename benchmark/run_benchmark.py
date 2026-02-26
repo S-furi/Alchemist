@@ -92,11 +92,12 @@ def setup_master_worktree(
     if not os.path.exists(MASTER_WORKTREE):
         print(f"Setting up Master worktree at {MASTER_WORKTREE}...")
         run_command("git worktree prune")
+        run_command("git fetch")
         run_command(f"git worktree add {MASTER_WORKTREE} {commit_hash}")
 
 
-def monitor_memory(proc: subprocess.Popen) -> float:
-    peak_rss = 0
+def monitor_memory(proc: subprocess.Popen, skip_samples: int = 5) -> float:
+    samples = []
     if not PSUTIL_AVAILABLE:
         return 0.0
 
@@ -107,13 +108,22 @@ def monitor_memory(proc: subprocess.Popen) -> float:
                 current_rss = ps_proc.memory_info().rss
                 for child in ps_proc.children(recursive=True):
                     current_rss += child.memory_info().rss
-                peak_rss = max(peak_rss, current_rss)
+                samples.append(current_rss)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
-            time.sleep(0.1)
+            time.sleep(1.0)
     except psutil.NoSuchProcess:
         pass
-    return peak_rss / (1024 * 1024)  # mb
+
+    if not samples:
+        return 0.0
+
+    if len(samples) > skip_samples: # skip ramp up
+        relevant_samples = samples[skip_samples:]
+    else:
+        relevant_samples = [samples[-1]]
+
+    return statistics.mean(relevant_samples) / (1024 * 1024)  # mb
 
 
 def extract_duration(output: str) -> float | None:
@@ -151,7 +161,7 @@ def run_benchmark_scenario(
                     cmd, shell=True, stdout=tmp, stderr=subprocess.STDOUT, text=True
                 )
 
-                peak_mb = monitor_memory(proc)
+                avg_mb = monitor_memory(proc)
                 proc.wait()
                 tmp.seek(0)
                 output = tmp.read()
@@ -165,15 +175,15 @@ def run_benchmark_scenario(
             duration = extract_duration(output)
             if duration is not None:
                 times.append(duration)
-                mems.append(peak_mb)
-                print(f" {duration:.2f}s, Peak Mem: {peak_mb:.2f} MB")
+                mems.append(avg_mb)
+                print(f" {duration:.2f}s, Avg Mem: {avg_mb:.2f} MB")
                 scenario_results.append(
                     {
                         "Engine": engine_name,
                         "Scenario": os.path.basename(scenario_path),
                         "Run": i,
                         "Time(s)": duration,
-                        "PeakMem(MB)": peak_mb,
+                        "AvgMem(MB)": avg_mb,
                     }
                 )
             else:
@@ -190,8 +200,8 @@ def run_benchmark_scenario(
             "MedianTime": statistics.median(times),
             "BestTime": min(times),
             "WorstTime": max(times),
-            "AvgPeakMem": statistics.mean(mems) if mems else 0,
-            "MaxPeakMem": max(mems) if mems else 0,
+            "AvgMem": statistics.mean(mems) if mems else 0,
+            "MaxMem": max(mems) if mems else 0,
             "AllRuns": "|".join([f"{t:.2f}" for t in times]),
         }
 
@@ -228,7 +238,7 @@ def print_summary_table(summary: list[dict[str, Any]]):
     for r in summary:
         print(
             f"{r['Engine']:<10} | {r['Scenario']:<20} | {r['AvgTime']:<10.2f} | "
-            f"{r['BestTime']:<8.2f} | {r['AvgPeakMem']:<10.2f} | {r['MaxPeakMem']:<10.2f}"
+            f"{r['BestTime']:<8.2f} | {r['AvgMem']:<10.2f} | {r['MaxMem']:<10.2f}"
         )
     print("=" * 110)
 
